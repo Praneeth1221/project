@@ -1,53 +1,74 @@
-import { useState } from "react";
-import axios from "axios";
-import Button from "react-bootstrap/Button";
-import Col from "react-bootstrap/Col";
-import Form from "react-bootstrap/Form";
-import InputGroup from "react-bootstrap/InputGroup";
-import Row from "react-bootstrap/Row";
-import "./regform.css";
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useParams, useNavigate } from 'react-router-dom';
+import Button from 'react-bootstrap/Button';
+import Col from 'react-bootstrap/Col';
+import Form from 'react-bootstrap/Form'; // Make sure to import Form
+import Row from 'react-bootstrap/Row';
+import './updatecashier.css';
 
-export default function Regform() {
+export default function UpdateCashier() {
+  const { id } = useParams(); // Get the cashier ID from the URL parameters
+  const navigate = useNavigate(); // Hook to programmatically navigate
   const [validated, setValidated] = useState(false);
   const [formData, setFormData] = useState({
-    firstname: "",
-    lastname: "",
-    dateofbirth: "",
-    gender: "",
-    mobileno: "",
-    email: "",
-    address: "",
-    educationQualifications: "",
-    experience: "",
-    additionalDetails: "",
+    firstname: '',
+    lastname: '',
+    dateofbirth: '',
+    gender: '',
+    mobileno: '',
+    email: '',
+    address: '',
+    educationQualifications: '',
+    experience: '',
+    additionalDetails: ''
   });
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+
+  useEffect(() => {
+    // Fetch cashier data by ID when component mounts
+    axios.get(`http://localhost:3000/cashier/${id}`)
+      .then(response => {
+        setFormData(response.data.cashier);
+      })
+      .catch(error => {
+        console.error('Error fetching cashier data:', error);
+      });
+  }, [id]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
+  const handleSubmit = (event) => {
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
+      event.preventDefault();
       event.stopPropagation();
     } else {
-      try {
-        const response = await axios.post(
-          "http://localhost:3000/cashier",
-          formData
-        );
-        console.log(response.data);
-      } catch (error) {
-        console.error("There was an error registering the cashier!", error);
-      }
+      event.preventDefault();
+      axios.put(`http://localhost:3000/cashier/${id}`, formData)
+        .then(response => {
+          console.log('Success:', response.data);
+          // Handle success - maybe clear the form or show a success message
+          navigate('/Admin01Cashier'); // Redirect to the cashiers list page
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+          // Handle error - show error message
+        });
     }
 
     setValidated(true);
   };
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+
   return (
     <div className="fulform">
       <div className="form">
-        <p className="topic">Registration Form for Cashier Assistant</p>
+        <p className="topic">Update Cashier Information</p>
 
         <div className="formcont">
           <Form noValidate validated={validated} onSubmit={handleSubmit}>
@@ -81,10 +102,10 @@ export default function Regform() {
                 <Form.Control
                   type="text"
                   placeholder="DD/MM/YYYY"
+                  required
                   name="dateofbirth"
                   value={formData.dateofbirth}
                   onChange={handleChange}
-                  required
                 />
                 <Form.Control.Feedback type="invalid">
                   Please provide a valid birthday.
@@ -100,9 +121,11 @@ export default function Regform() {
                       type="radio"
                       label="Male"
                       name="gender"
-                      value="Male"
-                      onChange={handleChange}
+                      id="genderMale"
                       required
+                      value="Male"
+                      checked={formData.gender === 'Male'}
+                      onChange={handleChange}
                     />
                     <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
                   </Form.Group>
@@ -111,9 +134,11 @@ export default function Regform() {
                       type="radio"
                       label="Female"
                       name="gender"
-                      value="Female"
-                      onChange={handleChange}
+                      id="genderFemale"
                       required
+                      value="Female"
+                      checked={formData.gender === 'Female'}
+                      onChange={handleChange}
                     />
                   </Form.Group>
                 </Row>
@@ -176,8 +201,6 @@ export default function Regform() {
                 <Form.Control
                   as="textarea"
                   rows={3}
-                  type="text"
-                  placeholder=" "
                   name="educationQualifications"
                   value={formData.educationQualifications}
                   onChange={handleChange}
@@ -192,8 +215,6 @@ export default function Regform() {
                 <Form.Control
                   as="textarea"
                   rows={2}
-                  type="text"
-                  placeholder=" "
                   name="experience"
                   value={formData.experience}
                   onChange={handleChange}
@@ -208,9 +229,6 @@ export default function Regform() {
                 <Form.Control
                   as="textarea"
                   rows={3}
-                
-                  type="text"
-                  placeholder=" "
                   name="additionalDetails"
                   value={formData.additionalDetails}
                   onChange={handleChange}
@@ -219,8 +237,8 @@ export default function Regform() {
               </Form.Group>
             </Row>
 
-            <Button className="btnreg" type="submit">
-              Register
+            <Button className="btnupdate" type="submit">
+              Update
             </Button>
           </Form>
         </div>
